@@ -5,6 +5,9 @@ This repository is for various scripts and tools that I use with my HomeSeer set
 
 Currently for use with HS3, but should work with HS4 unless otherwise noted.
 
+Note: Some of the scripts provided here were found on the HomeSeer forums.  Specifically;
+- install-hs3.sh and the HomeSeer-manager scripts
+
 # hs-banner.sh
 This is a bash script to display an information banner on login. I have it added to my .bashrc to serve as a reminder that I have logged into my Production machine and take care with making changes.
 
