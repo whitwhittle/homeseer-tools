@@ -1,0 +1,38 @@
+#!/bin/bash
+
+HOMESEER_DIR=/opt/HomeSeer
+PID_FILE=/run/homeseer.pid
+START_PID_FILE=/run/homeseer-start.pid
+STOP_PID_FILE=/run/homeseer-stop.pid
+
+TIMEOUT=60
+
+
+echo $$ > "$PID_FILE"
+cd "$HOMESEER_DIR"
+mono HSConsole.exe --log
+EXIT=$?
+echo "HomeSeer exited with code $EXIT."
+
+# Homeseer forks shutdown and restart scripts. If we're not trying to stop it, give them time to run.
+if [ -e "$STOP_PID_FILE" ] || [[ $EXIT -eq 0 ]]; then
+    TRIES=$((TIMEOUT/5))
+    while [[ $TRIES -gt 0 ]] && ! [ -e "$STOP_PID_FILE" ]; do
+        echo "Waiting $((TRIES*5)) seconds for HomeSeer scripts to finish."
+        sleep 5
+        TRIES=$((TRIES-1))
+    done
+fi
+
+# Kill the start / monitoring script here, so it always finishes before the stop script.
+if ([ -e "$STOP_PID_FILE" ] || [[ $EXIT -eq 0 ]]) && [ -e "$START_PID_FILE" ]; then
+    echo "Killing monitor."
+    START_PID=`cat "$START_PID_FILE"`
+    [ -n "$START_PID" ] && kill "$START_PID" > /dev/null 2>&1 && sleep 2
+    kill -SIGKILL "$START_PID" > /dev/null 2>&1
+    rm -f "$START_PID_FILE"
+fi
+
+# Done.
+rm -f "$PID_FILE"
+exit $EXIT

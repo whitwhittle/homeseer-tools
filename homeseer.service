@@ -1,0 +1,13 @@
+[Unit]
+Description=HomeSeer Service
+
+[Service]
+WorkingDirectory=/opt/HomeSeer-manager
+ExecStart=/opt/HomeSeer-manager/start
+ExecStop=/opt/HomeSeer-manager/stop
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=2m30s
+
+[Install]
+WantedBy=multi-user.target

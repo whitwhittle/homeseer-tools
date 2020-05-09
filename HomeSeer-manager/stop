@@ -1,0 +1,69 @@
+#!/bin/bash
+
+HOMESEER_DIR=/opt/HomeSeer
+PID_FILE=/run/homeseer.pid
+START_PID_FILE=/run/homeseer-start.pid
+STOP_PID_FILE=/run/homeseer-stop.pid
+
+TIMEOUT=120
+
+
+# Looks like stop is already running?
+if [ -e "$STOP_PID_FILE" ]; then
+    kill -SIGKILL `cat "$STOP_PID_FILE"` > /dev/null 2>&1
+fi
+echo $$ > /run/homeseer-stop.pid
+
+echo "Stopping HomeSeer..."
+
+# Seond "shutdown" command to HomeSeer until timeout or exit.
+RUNNING=true
+TRIES=$((TIMEOUT/5))
+while [[ $TRIES -gt 0 ]] && $RUNNING; do
+    RUNNING=false
+    for SESSION in `screen -ls | grep -o '[0-9]*\.homeseer'`; do
+        echo "Sending shutdown to $SESSION. ($TRIES attempts remaining.)"
+        screen -p 0 -S "$SESSION" -X stuff 'shutdown^M' && RUNNING=true
+    done
+
+    if $RUNNING; then
+        sleep 5
+        TRIES=$((TRIES-1))
+    fi
+done
+
+# Cleanup any remaining screen sessions.
+for SESSION in `screen -ls | grep -o '[0-9]*\.homeseer'`; do
+    echo "Sending quit command to $SESSION."
+    screen -p 0 -S "$SESSION" -X quit
+done
+
+EXIT=0
+
+# Does the start script appear to be alive?
+if [ -e "$START_PID_FILE" ]; then
+    START_PID=`cat "$START_PID_FILE"`
+    if [ -n "$START_PID" ]; then
+        echo "Killing HomeSeer.start PID $START_PID."
+        kill -SIGKILL "$START_PID" > /dev/null 2>&1
+        EXIT=1
+    fi
+fi
+
+# Does the run script appear to be alive?
+if [ -e "$PID_FILE" ]; then
+    PID=`cat "$PID_FILE"`
+    if [ -n "$PID" ]; then
+        echo "Killing HomeSeer PID $PID."
+        kill -SIGKILL "$PID" > /dev/null 2>&1
+        EXIT=1
+    fi
+fi
+
+# Cleanup.
+rm -f "$PID_FILE"
+rm -f "$START_PID_FILE"
+rm -f "$STOP_PID_FILE"
+
+echo "Done."
+exit $EXIT

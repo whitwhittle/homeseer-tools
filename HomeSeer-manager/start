@@ -1,0 +1,54 @@
+#!/bin/bash
+
+HOMESEER_DIR=/opt/HomeSeer
+PID_FILE=/run/homeseer.pid
+START_PID_FILE=/run/homeseer-start.pid
+
+
+# Cleanup if HomeSeer appears to be running.
+if [ -e "$PID_FILE" ]; then
+    ./stop || exit #?
+fi
+
+echo $$ > $START_PID_FILE
+
+echo "Starting HomeSeer in screen..."
+echo > "$PID_FILE"
+screen -dmS homeseer ./run
+
+sleep 2
+
+# Watch for dead HomeSeer launch process or screen session.
+LAST_PID=
+while [ -e "$PID_FILE" ]; do
+    PID=`cat "$PID_FILE"`
+
+    # Log PID. (This shouldn't change, but if it does, best to see it.)
+    if [ "$PID" != "$LAST_PID" ]; then
+        [ -n "$PID" ] && echo "HomeSeer running at PID $PID."
+        LAST_PID="$PID"
+    fi
+
+    # If we have a PID and it's dead, exit.
+    if [ -n "$PID" ] && ! kill -0 "$PID" > /dev/null 2>&1 && [ -e "$PID_FILE" ]; then
+        echo "HomeSeer exited unexpectedly."
+        rm -f "$START_PID_FILE"
+        exit 1
+    fi
+
+    # If screen is dead, exit.
+    if ! screen -ls | grep -o '[0-9]*\.homeseer' > /dev/null && [ -e "$PID_FILE" ]; then
+        echo "screen exited unexpectedly."
+        rm -f "$START_PID_FILE"
+        exit 1
+    fi
+
+    if [ -e "$PID_FILE" ]; then
+        sleep 5
+    fi
+done
+
+# We should be killed by the run script before getting here.
+echo "HomeSeer exited."
+rm -f "$START_PID_FILE"
+exit 1
