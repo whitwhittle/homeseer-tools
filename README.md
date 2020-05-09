@@ -13,7 +13,7 @@ https://forums.homeseer.com/forum/homeseer-products-services/system-software-con
 This is a bash script to display an information banner on login. I have it added to my .bashrc to serve as a reminder that I have logged into my Production machine and take care with making changes.
 
 # install-hs3.sh
-This will "install" the homeseer.service into systemd.  Make sure that you have gone through and updated working directories as needed.
+This will "install" the homeseer.service into systemd.  Make sure that you have gone through and updated working directories as needed.  This does NOT install the HomeSeer 3 Linux binaries.  It is assumed that the user has already downloaded the necessary binaries and installed them.
 
 IMPORTANT: The user should modify the directories defined in the script to match their system.  My current system is installed in the /opt directory.  Edit the script to match your system.
 
