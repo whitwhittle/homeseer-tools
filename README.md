@@ -1,5 +1,5 @@
 # Homeseer-Tools
-v 0.0 5/9/20 - Initial Issue
+v 0.1 5/9/20 - Initial Issue
 
 This repository is for various scripts and tools that I use with my HomeSeer setup.
 
